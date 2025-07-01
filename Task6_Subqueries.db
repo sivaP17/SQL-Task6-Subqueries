@@ -1,0 +1,66 @@
+CREATE TABLE Students (
+    student_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    age INTEGER
+);
+
+CREATE TABLE Courses (
+    course_id INTEGER PRIMARY KEY,
+    course_name TEXT NOT NULL
+);
+
+CREATE TABLE Enrollments (
+    enrollment_id INTEGER PRIMARY KEY,
+    student_id INTEGER,
+    course_id INTEGER,
+    marks INTEGER,
+    FOREIGN KEY (student_id) REFERENCES Students(student_id),
+    FOREIGN KEY (course_id) REFERENCES Courses(course_id)
+);
+
+INSERT INTO Students (name, age) VALUES ('Alice', 20), ('Bob', 21), ('Charlie', 19);
+
+INSERT INTO Courses (course_name) VALUES ('Math'), ('Physics'), ('Chemistry');
+
+INSERT INTO Enrollments (student_id, course_id, marks) VALUES
+(1, 1, 85),  
+(1, 2, 90), 
+(2, 1, 70),  
+(2, 3, 75),  
+(3, 2, 95);  
+
+SELECT name
+FROM Students
+WHERE student_id IN (
+    SELECT student_id
+    FROM Enrollments
+    WHERE marks > (SELECT AVG(marks) FROM Enrollments)
+);
+
+SELECT name,
+       (SELECT MAX(marks)
+        FROM Enrollments
+        WHERE Students.student_id = Enrollments.student_id) AS max_mark
+FROM Students;
+
+SELECT s.name, avg_data.avg_marks
+FROM (
+    SELECT student_id, AVG(marks) AS avg_marks
+    FROM Enrollments
+    GROUP BY student_id
+) AS avg_data
+JOIN Students s ON s.student_id = avg_data.student_id;
+
+SELECT name
+FROM Students s
+WHERE EXISTS (
+    SELECT 1
+    FROM Enrollments e
+    WHERE e.student_id = s.student_id
+);
+
+SELECT name,
+       (SELECT COUNT(*)
+        FROM Enrollments
+        WHERE Students.student_id = Enrollments.student_id) AS total_courses
+FROM Students;
